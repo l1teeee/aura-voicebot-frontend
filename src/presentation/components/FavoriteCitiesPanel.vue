@@ -16,11 +16,13 @@ const props = withDefaults(defineProps<{
 
 const emit = defineEmits<{
   remove: [id: string]
+  ask: [city: string]
   retry: []
   dismiss: []
 }>()
 
 const isOpen = ref(false)
+const detailsRef = ref<HTMLDetailsElement | null>(null)
 
 const triggerLabel = computed(() => {
   if (isOpen.value) return 'Cerrar ciudades favoritas'
@@ -32,15 +34,30 @@ const triggerLabel = computed(() => {
 function handleToggle(event: Event): void {
   isOpen.value = (event.target as HTMLDetailsElement).open
 }
+
+function formatTemperature(favorite: FavoriteCity): string | null {
+  if (favorite.temperature === null) return null
+  const unitSuffix = favorite.units === 'metric' ? 'C' : 'F'
+  return `${Math.round(favorite.temperature)}°${unitSuffix}`
+}
+
+function handleAsk(city: string): void {
+  if (detailsRef.value) {
+    detailsRef.value.open = false
+  }
+  isOpen.value = false
+  emit('ask', city)
+}
 </script>
 
 <template>
   <details
+    ref="detailsRef"
     class="fixed bottom-24 right-4 z-20 sm:bottom-6 sm:right-6"
     @toggle="handleToggle"
   >
     <summary
-      class="grid h-12 w-12 list-none place-items-center rounded-full bg-pin text-white shadow-subtle transition-colors marker:hidden hover:bg-pin-active"
+      class="grid h-12 w-12 list-none place-items-center rounded-full bg-accent text-white shadow-subtle transition-colors marker:hidden hover:bg-accent-active"
       :aria-label="triggerLabel"
     >
       <MorphIcon
@@ -82,9 +99,20 @@ function handleToggle(event: Event): void {
             :key="favorite.id"
             class="flex min-h-[40px] items-center justify-between gap-2 rounded-control border border-edge bg-surface py-1 pl-3 pr-1"
           >
-            <span class="min-w-0 truncate text-sm font-medium text-ink">
-              {{ favorite.city }}
-            </span>
+            <button
+              type="button"
+              class="flex min-w-0 flex-1 items-baseline gap-1.5 text-left text-sm font-medium text-ink hover:text-accent-active"
+              :aria-label="`Preguntar el clima en ${favorite.city}`"
+              @click="handleAsk(favorite.city)"
+            >
+              <span class="min-w-0 truncate">{{ favorite.city }}</span>
+              <span
+                v-if="formatTemperature(favorite)"
+                class="shrink-0 text-xs font-normal text-muted"
+              >
+                {{ formatTemperature(favorite) }}
+              </span>
+            </button>
             <button
               type="button"
               class="grid h-9 w-9 shrink-0 place-items-center rounded-control text-muted hover:bg-canvas hover:text-accent-active disabled:cursor-not-allowed disabled:opacity-50"

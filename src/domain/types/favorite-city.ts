@@ -2,6 +2,8 @@ export interface FavoriteCity {
   id: string
   city: string
   createdAt: string
+  temperature: number | null
+  units: string | null
 }
 
 export type AddFavoriteCityResponse = FavoriteCity

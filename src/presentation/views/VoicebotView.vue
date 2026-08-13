@@ -87,6 +87,10 @@ function handleRemoveFavoriteCity(id: string): void {
   void removeFavoriteCity(id)
 }
 
+function handleAskFavoriteCity(city: string): void {
+  void sendText(`¿Qué clima hace ahora en ${city}?`)
+}
+
 function retry(): void {
   if (needsIdentity.value) {
     dismissError()
@@ -383,6 +387,7 @@ function signOut(): void {
               :is-loading="favoriteCitiesLoading"
               :error="favoriteCitiesError"
               @remove="handleRemoveFavoriteCity"
+              @ask="handleAskFavoriteCity"
               @retry="retryFavoriteCities"
               @dismiss="dismissFavoriteCitiesError"
             />
