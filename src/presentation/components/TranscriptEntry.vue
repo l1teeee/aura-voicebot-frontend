@@ -6,10 +6,8 @@ const props = defineProps<{
   message: Message
 }>()
 
-const speakerLabel = computed(() => (props.message.role === 'user' ? 'TÚ' : 'AURA'))
-const speakerClass = computed(() =>
-  props.message.role === 'user' ? 'text-muted' : 'text-accent',
-)
+const isUser = computed(() => props.message.role === 'user')
+const speakerLabel = computed(() => (isUser.value ? 'Tú' : 'Aura'))
 
 const weatherSummary = computed(() => {
   const action = props.message.action
@@ -20,21 +18,31 @@ const weatherSummary = computed(() => {
 </script>
 
 <template>
-  <div class="border-t border-edge py-5 first:border-t-0 first:pt-0">
-    <p
-      class="text-xs tracking-widest"
-      :class="speakerClass"
+  <article
+    class="mb-3 flex"
+    :class="isUser ? 'justify-end' : 'justify-start'"
+  >
+    <div
+      class="max-w-[88%] border px-4 py-3 shadow-subtle"
+      :class="isUser
+        ? 'rounded-[1.5rem] rounded-br-md border-ink bg-ink text-canvas'
+        : 'rounded-[1.5rem] rounded-bl-md border-edge bg-canvas text-ink'"
     >
-      {{ speakerLabel }}
-    </p>
-    <p class="mt-2 leading-relaxed text-ink">
-      {{ message.text }}
-    </p>
-    <p
-      v-if="weatherSummary"
-      class="mt-2 text-xs text-muted"
-    >
-      {{ weatherSummary }}
-    </p>
-  </div>
+      <p
+        class="text-xs font-semibold"
+        :class="isUser ? 'text-surface' : 'text-accent'"
+      >
+        {{ speakerLabel }}
+      </p>
+      <p class="mt-1.5 leading-relaxed">
+        {{ message.text }}
+      </p>
+      <p
+        v-if="weatherSummary"
+        class="mt-2 rounded-control bg-surface px-3 py-2 text-xs leading-relaxed text-ink"
+      >
+        {{ weatherSummary }}
+      </p>
+    </div>
+  </article>
 </template>

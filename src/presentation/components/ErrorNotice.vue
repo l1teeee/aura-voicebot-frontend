@@ -15,16 +15,16 @@ const emit = defineEmits<{
   <div
     v-if="error"
     role="alert"
-    class="flex items-start justify-between gap-4 rounded-card border border-alert-edge bg-alert-surface px-4 py-3"
+    class="flex items-start justify-between gap-3 rounded-card border border-alert-edge bg-alert-surface px-4 py-3"
   >
     <p class="text-sm leading-relaxed text-ink">
       {{ error.message }}
     </p>
-    <div class="flex shrink-0 items-center gap-3">
+    <div class="flex shrink-0 items-center gap-1">
       <button
         v-if="error.recoverable"
         type="button"
-        class="text-sm font-medium text-accent transition-opacity duration-200 hover:opacity-70"
+        class="inline-flex min-h-[44px] items-center rounded-control px-2 text-sm font-medium text-accent transition-opacity duration-200 hover:opacity-70"
         @click="emit('retry')"
       >
         Reintentar
@@ -32,7 +32,7 @@ const emit = defineEmits<{
       <button
         type="button"
         aria-label="Cerrar aviso"
-        class="text-sm text-muted transition-opacity duration-200 hover:opacity-70"
+        class="inline-flex min-h-[44px] items-center rounded-control px-2 text-sm text-muted transition-opacity duration-200 hover:opacity-70"
         @click="emit('dismiss')"
       >
         Cerrar

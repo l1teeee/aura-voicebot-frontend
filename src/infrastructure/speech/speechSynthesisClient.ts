@@ -2,6 +2,10 @@ export interface SynthesisHandlers {
   onStart?: () => void
   onEnd?: () => void
   onError?: () => void
+  onBoundary?: (charLength: number) => void
+  // Solo lo emite el cliente que reproduce audio real; la Web Speech API no
+  // expone amplitud y deja este canal vacio.
+  onLevel?: (level: number) => void
 }
 
 export interface SynthesisClient {
@@ -13,13 +17,28 @@ export interface SynthesisClient {
 
 const SPANISH_LANG_PRIORITY = ['es-MX', 'es-US', 'es-ES']
 
+// Las voces SAPI locales de Windows (Sabina, Helena) suenan roboticas y suelen
+// aparecer primero en getVoices(). Puntuamos para que ganen las neuronales.
+function scoreVoice(voice: SpeechSynthesisVoice): number {
+  const name = voice.name.toLowerCase()
+  let score = 0
+
+  if (name.includes('natural')) score += 100
+  if (name.includes('online')) score += 40
+  if (name.includes('google')) score += 60
+  if (!voice.localService) score += 30
+
+  const langIndex = SPANISH_LANG_PRIORITY.indexOf(voice.lang)
+  score += langIndex === -1 ? 0 : (SPANISH_LANG_PRIORITY.length - langIndex) * 5
+
+  return score
+}
+
 function pickSpanishVoice(voices: SpeechSynthesisVoice[]): SpeechSynthesisVoice | null {
-  for (const lang of SPANISH_LANG_PRIORITY) {
-    const exact = voices.find((voice) => voice.lang === lang)
-    if (exact !== undefined) return exact
-  }
-  const anySpanish = voices.find((voice) => voice.lang.startsWith('es'))
-  return anySpanish ?? null
+  const spanish = voices.filter((voice) => voice.lang.toLowerCase().startsWith('es'))
+  if (spanish.length === 0) return null
+
+  return spanish.reduce((best, voice) => (scoreVoice(voice) > scoreVoice(best) ? voice : best))
 }
 
 export function createSynthesisClient(): SynthesisClient {
@@ -55,13 +74,15 @@ export function createSynthesisClient(): SynthesisClient {
       utterance.lang = 'es-ES'
     }
 
-    utterance.rate = 1
-    utterance.pitch = 1
+    utterance.rate = 0.95
+    utterance.pitch = 1.05
     utterance.volume = 1
 
     utterance.onstart = () => handlers.onStart?.()
     utterance.onend = () => handlers.onEnd?.()
     utterance.onerror = () => handlers.onError?.()
+    // Marca el ritmo real del habla: cada palabra dispara un boundary.
+    utterance.onboundary = (event) => handlers.onBoundary?.(event.charLength ?? 0)
 
     synth.speak(utterance)
   }

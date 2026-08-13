@@ -7,6 +7,7 @@ export interface BackendMessage {
   role: BackendMessageRole
   text: string
   createdAt: string
+  action?: ChatAction
 }
 
 export interface Conversation {

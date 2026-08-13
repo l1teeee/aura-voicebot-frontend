@@ -3,19 +3,19 @@ export default {
   theme: {
     extend: {
       colors: {
-        canvas: '#FAF7F2',
-        surface: '#F3EDE4',
-        edge: '#E4DACC',
-        ink: '#2E2B29',
-        muted: '#7A716A',
-        accent: '#C4714E',
-        'accent-active': '#A85B3C',
-        'alert-surface': '#FDF3EC',
-        'alert-edge': '#E8C4AC',
+        canvas: '#FFFFFF',
+        surface: '#C8EFC1',
+        edge: '#BDF0EC',
+        ink: '#053438',
+        muted: '#044B39',
+        accent: '#1EA97B',
+        'accent-active': '#044B39',
+        'alert-surface': '#CBF39D',
+        'alert-edge': '#72C613',
       },
       fontFamily: {
-        serif: ['Fraunces', 'Georgia', 'serif'],
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        serif: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
       borderRadius: {
         card: '16px',
@@ -26,7 +26,7 @@ export default {
         DEFAULT: '200ms',
       },
       boxShadow: {
-        subtle: '0 1px 2px rgb(46 43 41 / 0.06)',
+        subtle: '0 7px 20px rgb(5 52 56 / 0.09)',
       },
     },
   },

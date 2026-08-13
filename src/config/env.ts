@@ -1,4 +1,6 @@
+const configuredApiBaseUrl = import.meta.env.VITE_API_BASE_URL
+
 export const env = {
-  apiBaseUrl: import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3000',
+  apiBaseUrl: (configuredApiBaseUrl ?? 'http://localhost:3000').replace(/\/+$/, ''),
   requestTimeoutMs: 20000,
 } as const

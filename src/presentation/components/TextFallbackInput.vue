@@ -33,14 +33,23 @@ function handleSubmit(): void {
         maxlength="1000"
         placeholder="Escribe tu mensaje…"
         aria-label="Mensaje de texto"
+        :aria-describedby="text.length > 0 || disabled ? 'text-fallback-hint' : undefined"
         :disabled="disabled"
         class="w-full rounded-control border border-edge bg-surface px-4 py-2 text-ink placeholder:text-muted"
       >
       <p
         v-if="text.length > 0"
+        id="text-fallback-hint"
         class="mt-1 text-xs text-muted"
       >
         {{ text.length }}/1000
+      </p>
+      <p
+        v-else-if="disabled"
+        id="text-fallback-hint"
+        class="mt-1 text-xs text-muted"
+      >
+        Espera un momento para enviar otro mensaje.
       </p>
     </div>
     <button
