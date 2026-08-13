@@ -193,22 +193,6 @@ function loadLocalConversations(userId: string | null): Conversation[] {
   }
 }
 
-function conversationActivityAt(conversation: Conversation): number {
-  return conversation.messages.reduce((latest, message) => {
-    const createdAt = Date.parse(message.createdAt)
-    return Number.isNaN(createdAt) ? latest : Math.max(latest, createdAt)
-  }, Date.parse(conversation.startedAt) || 0)
-}
-
-function mostRecentConversation(conversations: Conversation[]): Conversation | undefined {
-  return conversations.reduce<Conversation | undefined>((latest, conversation) => {
-    if (!latest || conversationActivityAt(conversation) > conversationActivityAt(latest)) {
-      return conversation
-    }
-    return latest
-  }, undefined)
-}
-
 export const useConversationStore = defineStore('conversation', () => {
   const status = ref<ConversationStatus>('idle')
   const sessionId = ref<string>(loadSessionId())
@@ -221,13 +205,6 @@ export const useConversationStore = defineStore('conversation', () => {
       Boolean(userId.value && userName.value),
   )
   const conversations = ref<Conversation[]>(loadLocalConversations(userId.value))
-  if (
-    !sessionActive.value &&
-    conversations.value.length > 0 &&
-    !conversations.value.some((conversation) => conversation.sessionId === sessionId.value)
-  ) {
-    sessionId.value = mostRecentConversation(conversations.value)?.sessionId ?? sessionId.value
-  }
   const activeConversation = computed(
     () => conversations.value.find((conversation) => conversation.sessionId === sessionId.value) ?? null,
   )
@@ -307,13 +284,8 @@ export const useConversationStore = defineStore('conversation', () => {
     return result
   }
 
-  function loadConversations(nextConversations: Conversation[], preserveActiveSession = false): void {
+  function loadConversations(nextConversations: Conversation[]): void {
     conversations.value = normalizeConversations(nextConversations)
-    const latest = mostRecentConversation(conversations.value)
-    if (latest && !preserveActiveSession) {
-      sessionId.value = latest.sessionId
-      writeSessionValue(SESSION_ID_KEY, latest.sessionId)
-    }
     persistLocalHistory()
   }
 

@@ -374,9 +374,8 @@ export function useVoiceConversation(): UseVoiceConversationReturn {
       if (store.userName !== name) {
         return
       }
-      const shouldPreserveActiveSession = store.sessionActive && store.activeConversation !== null
       store.setIdentity(result.userId, name)
-      store.loadConversations(result.conversations, shouldPreserveActiveSession)
+      store.loadConversations(result.conversations)
       store.touchActivity()
     } catch {
       return
