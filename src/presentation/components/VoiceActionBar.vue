@@ -9,15 +9,34 @@ const props = withDefaults(defineProps<{
   // Se fuerza cuando el microfono no esta disponible: el compositor queda
   // abierto y no se puede cerrar desde la barra.
   forceComposer?: boolean
+  imagePending?: boolean
 }>(), {
   forceComposer: false,
+  imagePending: false,
 })
 
 const emit = defineEmits<{
   submit: [text: string]
   repeat: []
   end: []
+  attachImage: [file: File]
 }>()
+
+const fileInputRef = ref<HTMLInputElement | null>(null)
+const canAttachImage = computed(() => props.status !== 'processing' && !props.imagePending)
+
+function triggerImagePicker(): void {
+  if (!canAttachImage.value) return
+  fileInputRef.value?.click()
+}
+
+function handleFileChange(event: Event): void {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''
+  if (!file) return
+  emit('attachImage', file)
+}
 
 const CONFIRM_TIMEOUT_MS = 3200
 
@@ -147,6 +166,43 @@ onUnmounted(() => {
         </svg>
         <span class="voice-action-bar__label">Repetir</span>
       </button>
+
+      <button
+        type="button"
+        class="voice-action-bar__button"
+        :disabled="!canAttachImage"
+        :aria-label="imagePending ? 'Enviando foto' : 'Adjuntar una foto'"
+        @click="triggerImagePicker"
+      >
+        <svg
+          class="voice-action-bar__icon"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="1.6"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        >
+          <path d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z" />
+          <circle
+            cx="12"
+            cy="13"
+            r="3"
+          />
+        </svg>
+        <span class="voice-action-bar__label">{{ imagePending ? 'Enviando…' : 'Foto' }}</span>
+      </button>
+
+      <input
+        ref="fileInputRef"
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        capture="environment"
+        class="sr-only"
+        tabindex="-1"
+        aria-hidden="true"
+        @change="handleFileChange"
+      >
 
       <button
         type="button"

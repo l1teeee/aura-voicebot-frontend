@@ -1,4 +1,4 @@
-import type { ChatGateway, ChatResponse } from '@/domain/ports/chat-gateway'
+import type { ChatGateway, ChatImagePayload, ChatResponse } from '@/domain/ports/chat-gateway'
 import {
   FavoriteCityError,
   type AddFavoriteCityResponse,
@@ -60,13 +60,18 @@ export class HttpChatGateway implements ChatGateway {
     })
   }
 
-  async sendMessage(message: string, sessionId: string, userId?: string): Promise<ChatResponse> {
+  async sendMessage(
+    message: string,
+    sessionId: string,
+    userId?: string,
+    image?: ChatImagePayload,
+  ): Promise<ChatResponse> {
     try {
-      return await this.postChat(message, sessionId, userId)
+      return await this.postChat(message, sessionId, userId, image)
     } catch (error) {
       if (error instanceof ApiError && error.status === RETRY_STATUS) {
         await wait(RETRY_DELAY_MS)
-        return this.postChat(message, sessionId, userId)
+        return this.postChat(message, sessionId, userId, image)
       }
       throw error
     }
@@ -108,10 +113,21 @@ export class HttpChatGateway implements ChatGateway {
     }
   }
 
-  private postChat(message: string, sessionId: string, userId?: string): Promise<ChatResponse> {
-    const body: { message: string; sessionId: string; userId?: string } = { message, sessionId }
+  private postChat(
+    message: string,
+    sessionId: string,
+    userId?: string,
+    image?: ChatImagePayload,
+  ): Promise<ChatResponse> {
+    const body: { message: string; sessionId: string; userId?: string; image?: ChatImagePayload } = {
+      message,
+      sessionId,
+    }
     if (userId) {
       body.userId = userId
+    }
+    if (image) {
+      body.image = image
     }
 
     return request<ChatResponse>('/api/chat', {

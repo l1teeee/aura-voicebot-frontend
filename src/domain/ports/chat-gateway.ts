@@ -12,9 +12,19 @@ export interface ChatResponse {
   action?: ChatAction
 }
 
+export interface ChatImagePayload {
+  mimeType: 'image/jpeg' | 'image/png' | 'image/webp'
+  data: string
+}
+
 export interface ChatGateway {
   identify(name: string): Promise<IdentifyResponse>
-  sendMessage(message: string, sessionId: string, userId?: string): Promise<ChatResponse>
+  sendMessage(
+    message: string,
+    sessionId: string,
+    userId?: string,
+    image?: ChatImagePayload,
+  ): Promise<ChatResponse>
   addFavoriteCity(userId: string, city: string): Promise<AddFavoriteCityResponse>
   listFavoriteCities(userId: string): Promise<FavoriteCity[]>
   removeFavoriteCity(id: string): Promise<RemoveFavoriteCityResponse>

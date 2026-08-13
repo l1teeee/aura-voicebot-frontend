@@ -29,6 +29,8 @@ const {
   toggle,
   requestMicPermission,
   sendText,
+  sendImage,
+  isSendingImage,
   repeatLastReply,
   canRepeat,
   dismissError,
@@ -90,6 +92,10 @@ function handleRemoveFavoriteCity(id: string): void {
 
 function handleAskFavoriteCity(city: string): void {
   void sendText(`¿Qué clima hace ahora en ${city}?`)
+}
+
+function handleAttachImage(file: File): void {
+  void sendImage(file)
 }
 
 function retry(): void {
@@ -375,9 +381,11 @@ function signOut(): void {
                 :status="status"
                 :can-repeat="canRepeat"
                 :force-composer="needsTextFallback"
+                :image-pending="isSendingImage"
                 @submit="sendText"
                 @repeat="repeatLastReply"
                 @end="createConversation"
+                @attach-image="handleAttachImage"
               />
             </div>
 

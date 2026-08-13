@@ -1,11 +1,13 @@
 import { computed, inject, onMounted, onUnmounted, ref } from 'vue'
 import type { ComputedRef, Ref } from 'vue'
 import { chatGatewayKey } from '@/config/injection'
+import type { ChatImagePayload } from '@/domain/ports/chat-gateway'
 import type { ConversationStatus } from '@/domain/types/conversation-status'
 import type { Conversation, Message } from '@/domain/types/message'
 import type { MicPermissionState } from '@/domain/types/mic-permission-state'
 import type { VoiceError } from '@/domain/types/voice-error'
 import { toVoiceError } from '@/infrastructure/api/httpChatGateway'
+import { compressImageFile } from '@/infrastructure/media/imageCompressor'
 import { useConversationStore } from '@/application/stores/conversation.store'
 import { useFavoriteCitiesStore } from '@/application/stores/favorite-cities.store'
 import { useAudioLevel } from './useAudioLevel'
@@ -14,6 +16,13 @@ import { useSpeechRecognition } from './useSpeechRecognition'
 import { useSpeechSynthesis } from './useSpeechSynthesis'
 
 const MAX_MESSAGE_LENGTH = 1000
+const IMAGE_MESSAGE_TEXT = '📷 Foto enviada'
+
+const IMAGE_PROCESSING_ERROR: VoiceError = {
+  code: 'validation',
+  message: 'No se pudo procesar la imagen. Intenta con otra foto.',
+  recoverable: true,
+}
 
 // Si Aura pregunta, el microfono se reabre solo para no perder la respuesta.
 const QUESTION_PATTERN = /[?¿]/
@@ -61,6 +70,8 @@ export interface UseVoiceConversationReturn {
   toggle: () => Promise<void>
   requestMicPermission: () => Promise<void>
   sendText: (text: string) => Promise<void>
+  sendImage: (file: File) => Promise<void>
+  isSendingImage: Ref<boolean>
   repeatLastReply: () => void
   canRepeat: ComputedRef<boolean>
   dismissError: () => void
@@ -92,6 +103,7 @@ export function useVoiceConversation(): UseVoiceConversationReturn {
   const audioMeter = useAudioLevel()
   const isRequestingPermission = ref(false)
   const isIdentifying = ref(false)
+  const isSendingImage = ref(false)
   let interactionVersion = 0
   let autoListenRetries = 0
   let autoListenTimer: ReturnType<typeof setTimeout> | null = null
@@ -162,7 +174,7 @@ export function useVoiceConversation(): UseVoiceConversationReturn {
     })
   }
 
-  async function exchange(text: string): Promise<void> {
+  async function exchange(text: string, image?: ChatImagePayload): Promise<void> {
     const rotated = store.rotateSessionIfExpired()
     if (rotated && !store.identityResolved) {
       return
@@ -174,7 +186,7 @@ export function useVoiceConversation(): UseVoiceConversationReturn {
     transition('processing')
 
     try {
-      const response = await gateway.sendMessage(text, messageSessionId, store.userId ?? undefined)
+      const response = await gateway.sendMessage(text, messageSessionId, store.userId ?? undefined, image)
       store.addMessage('bot', response.reply, response.action, undefined, messageSessionId)
       if (response.action?.type === 'favorite_city_added') {
         favoriteCitiesStore.invalidate()
@@ -305,12 +317,9 @@ export function useVoiceConversation(): UseVoiceConversationReturn {
     await startListening()
   }
 
-  async function sendText(text: string): Promise<void> {
-    const trimmed = text.trim()
-    if (trimmed === '' || trimmed.length > MAX_MESSAGE_LENGTH || store.status === 'processing') {
-      return
-    }
-
+  // Corta cualquier escucha/reproduccion en curso antes de arrancar un
+  // intercambio nuevo (por texto o por foto), dejando el status en idle.
+  function interruptForNewExchange(): void {
     cancelAutoListen()
 
     if (store.status === 'listening') {
@@ -323,8 +332,39 @@ export function useVoiceConversation(): UseVoiceConversationReturn {
 
     transition('idle')
     store.setError(null)
+  }
+
+  async function sendText(text: string): Promise<void> {
+    const trimmed = text.trim()
+    if (trimmed === '' || trimmed.length > MAX_MESSAGE_LENGTH || store.status === 'processing') {
+      return
+    }
+
+    interruptForNewExchange()
 
     await exchange(trimmed)
+  }
+
+  async function sendImage(file: File): Promise<void> {
+    if (store.status === 'processing' || isSendingImage.value) {
+      return
+    }
+
+    isSendingImage.value = true
+    try {
+      let image: ChatImagePayload
+      try {
+        image = await compressImageFile(file)
+      } catch {
+        store.setError(IMAGE_PROCESSING_ERROR)
+        return
+      }
+
+      interruptForNewExchange()
+      await exchange(IMAGE_MESSAGE_TEXT, image)
+    } finally {
+      isSendingImage.value = false
+    }
   }
 
   function repeatLastReply(): void {
@@ -468,6 +508,8 @@ export function useVoiceConversation(): UseVoiceConversationReturn {
     toggle,
     requestMicPermission,
     sendText,
+    sendImage,
+    isSendingImage,
     repeatLastReply,
     canRepeat: computed(() => store.status !== 'processing' && store.messages.some((message) => message.role === 'bot')),
     dismissError,
