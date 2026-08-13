@@ -1,4 +1,5 @@
 import type { ChatGateway, ChatResponse } from '@/domain/ports/chat-gateway'
+import type { IdentifyResponse } from '@/domain/types/identity'
 import type { VoiceError } from '@/domain/types/voice-error'
 import { ApiError, request } from './httpClient'
 
@@ -12,13 +13,21 @@ function wait(ms: number): Promise<void> {
 }
 
 export class HttpChatGateway implements ChatGateway {
-  async sendMessage(message: string, sessionId: string): Promise<ChatResponse> {
+  async identify(name: string): Promise<IdentifyResponse> {
+    return request<IdentifyResponse>('/api/identify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    })
+  }
+
+  async sendMessage(message: string, sessionId: string, userId?: string): Promise<ChatResponse> {
     try {
-      return await this.postChat(message, sessionId)
+      return await this.postChat(message, sessionId, userId)
     } catch (error) {
       if (error instanceof ApiError && error.status === RETRY_STATUS) {
         await wait(RETRY_DELAY_MS)
-        return this.postChat(message, sessionId)
+        return this.postChat(message, sessionId, userId)
       }
       throw error
     }
@@ -33,11 +42,16 @@ export class HttpChatGateway implements ChatGateway {
     }
   }
 
-  private postChat(message: string, sessionId: string): Promise<ChatResponse> {
+  private postChat(message: string, sessionId: string, userId?: string): Promise<ChatResponse> {
+    const body: { message: string; sessionId: string; userId?: string } = { message, sessionId }
+    if (userId) {
+      body.userId = userId
+    }
+
     return request<ChatResponse>('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message, sessionId }),
+      body: JSON.stringify(body),
     })
   }
 }
@@ -75,7 +89,7 @@ export function toVoiceError(error: unknown): VoiceError {
     if (error.code === 'VALIDATION_ERROR' || error.status === 400) {
       return {
         code: 'validation',
-        message: 'Algo en tu mensaje no era valido. Intentalo de nuevo.',
+        message: error.message,
         recoverable: true,
       }
     }

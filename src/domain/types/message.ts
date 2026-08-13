@@ -1,4 +1,19 @@
-export type Speaker = 'user' | 'assistant'
+export type MessageRole = 'user' | 'bot'
+export type Speaker = MessageRole
+
+export type BackendMessageRole = 'user' | 'bot'
+
+export interface BackendMessage {
+  role: BackendMessageRole
+  text: string
+  createdAt: string
+}
+
+export interface Conversation {
+  sessionId: string
+  startedAt: string
+  messages: BackendMessage[]
+}
 
 export interface WeatherData {
   city: string
@@ -19,8 +34,9 @@ export type ChatAction = WeatherAction
 
 export interface Message {
   id: string
-  speaker: Speaker
+  role: MessageRole
+  sessionId: string
   text: string
   action?: ChatAction
-  createdAt: number
+  createdAt: string
 }

@@ -1,4 +1,5 @@
 import type { ChatAction } from '../types/message'
+import type { IdentifyResponse } from '../types/identity'
 
 export interface ChatResponse {
   reply: string
@@ -7,6 +8,7 @@ export interface ChatResponse {
 }
 
 export interface ChatGateway {
-  sendMessage(message: string, sessionId: string): Promise<ChatResponse>
+  identify(name: string): Promise<IdentifyResponse>
+  sendMessage(message: string, sessionId: string, userId?: string): Promise<ChatResponse>
   checkHealth(): Promise<boolean>
 }

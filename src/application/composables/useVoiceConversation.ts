@@ -14,8 +14,6 @@ import { useSpeechSynthesis } from './useSpeechSynthesis'
 
 const MAX_MESSAGE_LENGTH = 1000
 
-const SESSION_EXPIRED_TEXT = 'Se perdio el historial por inactividad. Empezamos una conversacion nueva.'
-
 const INSECURE_CONTEXT_ERROR: VoiceError = {
   code: 'insecure-context',
   message: 'Necesitas una conexion segura (HTTPS) para usar el microfono.',
@@ -58,6 +56,12 @@ export interface UseVoiceConversationReturn {
   requestMicPermission: () => Promise<void>
   sendText: (text: string) => Promise<void>
   dismissError: () => void
+  userName: ComputedRef<string | null>
+  needsIdentity: ComputedRef<boolean>
+  isIdentifying: Ref<boolean>
+  identify: (name: string) => Promise<boolean>
+  continueAnonymously: () => void
+  startNewConversation: () => void
 }
 
 export function useVoiceConversation(): UseVoiceConversationReturn {
@@ -72,6 +76,7 @@ export function useVoiceConversation(): UseVoiceConversationReturn {
   const synthesis = useSpeechSynthesis()
   const audioMeter = useAudioLevel()
   const isRequestingPermission = ref(false)
+  const isIdentifying = ref(false)
 
   const recognition = useSpeechRecognition({
     onFinalTranscript: handleFinalTranscript,
@@ -105,15 +110,15 @@ export function useVoiceConversation(): UseVoiceConversationReturn {
 
   async function exchange(text: string): Promise<void> {
     if (store.rotateSessionIfExpired()) {
-      store.addMessage('assistant', SESSION_EXPIRED_TEXT)
+      return
     }
 
     store.addMessage('user', text)
     transition('processing')
 
     try {
-      const response = await gateway.sendMessage(text, store.sessionId)
-      store.addMessage('assistant', response.reply, response.action)
+      const response = await gateway.sendMessage(text, store.sessionId, store.userId ?? undefined)
+      store.addMessage('bot', response.reply, response.action)
       speakReply(response.reply)
     } catch (error) {
       store.setError(toVoiceError(error))
@@ -249,6 +254,34 @@ export function useVoiceConversation(): UseVoiceConversationReturn {
     transition('idle')
   }
 
+  async function identify(name: string): Promise<boolean> {
+    const trimmed = name.trim()
+    if (trimmed === '' || isIdentifying.value) return false
+    store.setError(null)
+    isIdentifying.value = true
+    try {
+      const result = await gateway.identify(trimmed)
+      store.setIdentity(result.userId, trimmed)
+      store.loadConversations(result.conversations)
+      store.touchActivity()
+      return true
+    } catch (error) {
+      store.setError(toVoiceError(error))
+      return false
+    } finally {
+      isIdentifying.value = false
+    }
+  }
+
+  function continueAnonymously(): void {
+    store.setIdentity(null, null)
+    store.touchActivity()
+  }
+
+  function startNewConversation(): void {
+    store.startNewConversation()
+  }
+
   function handleVisibilityChange(): void {
     if (document.visibilityState !== 'hidden' || store.status !== 'listening') {
       return
@@ -291,5 +324,11 @@ export function useVoiceConversation(): UseVoiceConversationReturn {
     requestMicPermission,
     sendText,
     dismissError,
+    userName: computed(() => store.userName),
+    needsIdentity: computed(() => !store.sessionActive || !store.identityResolved),
+    isIdentifying,
+    identify,
+    continueAnonymously,
+    startNewConversation,
   }
 }

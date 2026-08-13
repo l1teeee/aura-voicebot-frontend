@@ -9,6 +9,7 @@ import VoiceButton from '@/presentation/components/VoiceButton.vue'
 import TextFallbackInput from '@/presentation/components/TextFallbackInput.vue'
 import TranscriptList from '@/presentation/components/TranscriptList.vue'
 import EmptyState from '@/presentation/components/EmptyState.vue'
+import IdentityPrompt from '@/presentation/components/IdentityPrompt.vue'
 
 const {
   status,
@@ -24,10 +25,24 @@ const {
   requestMicPermission,
   sendText,
   dismissError,
+  userName,
+  needsIdentity,
+  isIdentifying,
+  identify,
+  continueAnonymously,
+  startNewConversation,
 } = useVoiceConversation()
 
 const isEmpty = computed(() => messages.value.length === 0 && interimTranscript.value.length === 0)
 const micBlocked = computed(() => micPermission.value !== 'granted' || !isSecureContext)
+
+function retry(): void {
+  if (needsIdentity.value) {
+    dismissError()
+    return
+  }
+  void toggle()
+}
 </script>
 
 <template>
@@ -42,6 +57,30 @@ const micBlocked = computed(() => micPermission.value !== 'granted' || !isSecure
     </header>
 
     <main class="min-h-0 flex-1 overflow-hidden px-6 py-4">
+      <IdentityPrompt
+        v-if="needsIdentity"
+        :busy="isIdentifying"
+        @identify="identify"
+        @anonymous="continueAnonymously"
+      />
+      <div
+        v-else-if="userName"
+        class="mb-4 flex items-center justify-between text-xs text-muted"
+      >
+        <span>Hola, {{ userName }}</span>
+        <button
+          class="text-accent"
+          type="button"
+          @click="startNewConversation"
+        >
+          Nueva conversacion
+        </button>
+      </div>
+      <ErrorNotice
+        :error="error"
+        @retry="retry"
+        @dismiss="dismissError"
+      />
       <EmptyState v-if="isEmpty" />
       <TranscriptList
         v-else
@@ -50,18 +89,16 @@ const micBlocked = computed(() => micPermission.value !== 'granted' || !isSecure
       />
     </main>
 
-    <div class="sticky bottom-0 space-y-3 bg-canvas px-6 pb-6 pt-3">
+    <div
+      v-if="!needsIdentity"
+      class="sticky bottom-0 space-y-3 bg-canvas px-6 pb-6 pt-3"
+    >
       <MicPermissionAlert
         v-if="micBlocked"
         :state="micPermission"
         :is-secure-context="isSecureContext"
         :busy="isRequestingPermission"
         @request="requestMicPermission"
-      />
-      <ErrorNotice
-        :error="error"
-        @retry="toggle"
-        @dismiss="dismissError"
       />
       <StatusIndicator
         :status="status"

@@ -6,9 +6,9 @@ const props = defineProps<{
   message: Message
 }>()
 
-const speakerLabel = computed(() => (props.message.speaker === 'user' ? 'TÚ' : 'AURA'))
+const speakerLabel = computed(() => (props.message.role === 'user' ? 'TÚ' : 'AURA'))
 const speakerClass = computed(() =>
-  props.message.speaker === 'user' ? 'text-muted' : 'text-accent',
+  props.message.role === 'user' ? 'text-muted' : 'text-accent',
 )
 
 const weatherSummary = computed(() => {
