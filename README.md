@@ -1,5 +1,7 @@
 # Aura
 
+**Demo en producción:** https://aura-voicebot-frontend.vercel.app/
+
 Aura es un asistente personal conversacional por voz especializado en clima. El usuario pulsa un botón, habla, y Aura transcribe su voz localmente en el navegador, envía el texto al backend, y lee en voz alta la respuesta generada. Cuando la pregunta involucra el tiempo en una ciudad, la respuesta viene acompañada de un dato estructurado (`weather_lookup`) que la interfaz muestra como una línea de contexto discreta bajo el turno correspondiente.
 
 Si el navegador no soporta reconocimiento de voz o el contexto no es seguro (ver más abajo), la aplicación ofrece un campo de texto como alternativa para seguir conversando con Aura sin usar el micrófono.
@@ -67,6 +69,8 @@ La aplicación queda disponible en `http://localhost:5173`, que es un contexto s
 | `npm run lint` | ESLint sobre todo el proyecto. |
 
 ## Despliegue
+
+Este proyecto está desplegado en Vercel: **https://aura-voicebot-frontend.vercel.app/**, conectado a la API en **https://backend-production-1658.up.railway.app**.
 
 El frontend es una SPA estática: cualquier hosting de archivos estáticos con HTTPS por defecto sirve. Dos opciones habituales:
 
