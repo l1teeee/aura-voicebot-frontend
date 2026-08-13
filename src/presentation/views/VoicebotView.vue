@@ -5,8 +5,7 @@ import { MorphIcon } from 'morphicons/vue'
 import { useVoiceConversation } from '@/application/composables/useVoiceConversation'
 import MicPermissionAlert from '@/presentation/components/MicPermissionAlert.vue'
 import ErrorNotice from '@/presentation/components/ErrorNotice.vue'
-import AuraBrand from '@/presentation/components/AuraBrand.vue'
-import IdentityPrompt from '@/presentation/components/IdentityPrompt.vue'
+import NeuralAccessLogin from '@/components/ui/neural-access-login.vue'
 import HistorySidebar from '@/presentation/components/HistorySidebar.vue'
 import VoiceStage from '@/presentation/components/VoiceStage.vue'
 import VoiceActionBar from '@/presentation/components/VoiceActionBar.vue'
@@ -33,7 +32,6 @@ const {
   needsIdentity,
   isIdentifying,
   identify,
-  continueAnonymously,
   conversations,
   activeSessionId,
   selectConversation,
@@ -173,27 +171,18 @@ function signOut(): void {
       mode="out-in"
       appear
     >
-      <section
+      <NeuralAccessLogin
         v-if="needsIdentity"
         key="identity"
-        class="aura-login-shell"
+        :busy="isIdentifying"
+        @identify="identify"
       >
-        <div class="w-full max-w-lg space-y-3">
-          <header class="aura-auth-brand px-2 pb-2">
-            <AuraBrand />
-          </header>
-          <IdentityPrompt
-            :busy="isIdentifying"
-            @identify="identify"
-            @anonymous="continueAnonymously"
-          />
-          <ErrorNotice
-            :error="error"
-            @retry="retry"
-            @dismiss="dismissError"
-          />
-        </div>
-      </section>
+        <ErrorNotice
+          :error="error"
+          @retry="retry"
+          @dismiss="dismissError"
+        />
+      </NeuralAccessLogin>
 
       <div
         v-else

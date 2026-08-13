@@ -67,7 +67,6 @@ export interface UseVoiceConversationReturn {
   needsIdentity: ComputedRef<boolean>
   isIdentifying: Ref<boolean>
   identify: (name: string) => Promise<boolean>
-  continueAnonymously: () => void
   conversations: ComputedRef<Conversation[]>
   activeConversation: ComputedRef<Conversation | null>
   activeSessionId: ComputedRef<string>
@@ -386,11 +385,6 @@ export function useVoiceConversation(): UseVoiceConversationReturn {
     }
   }
 
-  function continueAnonymously(): void {
-    store.setIdentity(null, null)
-    store.touchActivity()
-  }
-
   function stopActiveInteraction(): void {
     interactionVersion += 1
     cancelAutoListen()
@@ -467,7 +461,6 @@ export function useVoiceConversation(): UseVoiceConversationReturn {
     needsIdentity: computed(() => !store.identityResolved || (!store.sessionActive && !store.userId)),
     isIdentifying,
     identify,
-    continueAnonymously,
     conversations: computed(() => store.conversations),
     activeConversation: computed(() => store.activeConversation),
     activeSessionId: computed(() => store.sessionId),

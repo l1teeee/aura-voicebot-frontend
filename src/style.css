@@ -146,14 +146,6 @@
   pointer-events: none;
 }
 
-.aura-login-shell {
-  display: grid;
-  min-height: 100dvh;
-  place-items: center;
-  overflow-y: auto;
-  padding: 2rem 1.25rem;
-}
-
 .aura-workspace {
   position: relative;
   display: flex;
@@ -163,10 +155,6 @@
   overflow: hidden;
   isolation: isolate;
   animation: aura-shell-enter 480ms ease-out both;
-}
-
-.aura-auth-brand h1 {
-  letter-spacing: -0.045em;
 }
 
 .aura-voice-shell {
