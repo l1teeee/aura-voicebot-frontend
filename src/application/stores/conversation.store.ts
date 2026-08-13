@@ -104,6 +104,10 @@ function isChatAction(value: unknown): value is ChatAction {
   }
 
   const { type, data } = value as { type?: unknown; data?: unknown }
+  if (type === 'favorite_city_added' || type === 'interaction_log') {
+    return true
+  }
+
   if (type !== 'weather_lookup') {
     return false
   }

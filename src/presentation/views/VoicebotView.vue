@@ -2,9 +2,13 @@
 import { computed, ref } from 'vue'
 import { Menu, MessageCircleMore, X } from 'lucide'
 import { MorphIcon } from 'morphicons/vue'
+import { useFavoriteCities } from '@/application/composables/useFavoriteCities'
+import { useFavoriteCityPrompt } from '@/application/composables/useFavoriteCityPrompt'
 import { useVoiceConversation } from '@/application/composables/useVoiceConversation'
 import MicPermissionAlert from '@/presentation/components/MicPermissionAlert.vue'
 import ErrorNotice from '@/presentation/components/ErrorNotice.vue'
+import FavoriteCitiesPanel from '@/presentation/components/FavoriteCitiesPanel.vue'
+import WeatherFavoriteCard from '@/presentation/components/WeatherFavoriteCard.vue'
 import NeuralAccessLogin from '@/components/ui/neural-access-login.vue'
 import HistorySidebar from '@/presentation/components/HistorySidebar.vue'
 import VoiceStage from '@/presentation/components/VoiceStage.vue'
@@ -28,6 +32,7 @@ const {
   repeatLastReply,
   canRepeat,
   dismissError,
+  userId,
   userName,
   needsIdentity,
   isIdentifying,
@@ -38,6 +43,22 @@ const {
   startNewConversation,
   logout,
 } = useVoiceConversation()
+
+const favoriteCitiesApi = useFavoriteCities()
+const {
+  cities: favoriteCities,
+  isLoading: favoriteCitiesLoading,
+  error: favoriteCitiesError,
+  load: loadFavoriteCities,
+  remove: removeFavoriteCity,
+  dismissError: dismissFavoriteCitiesError,
+} = favoriteCitiesApi
+
+const {
+  card: favoriteCityCard,
+  save: saveFavoriteCity,
+  dismiss: dismissFavoriteCityCard,
+} = useFavoriteCityPrompt(favoriteCitiesApi)
 
 const micBlocked = computed(() => micPermission.value !== 'granted' || !isSecureContext)
 const historyOpen = ref(false)
@@ -57,6 +78,14 @@ const transcriptLabel = computed(() => {
     ? 'Ver mensajes, 1 mensaje'
     : `Ver mensajes, ${messageCount.value} mensajes`
 })
+
+function retryFavoriteCities(): void {
+  if (userId.value) void loadFavoriteCities(userId.value)
+}
+
+function handleRemoveFavoriteCity(id: string): void {
+  void removeFavoriteCity(id)
+}
 
 function retry(): void {
   if (needsIdentity.value) {
@@ -284,51 +313,81 @@ function signOut(): void {
             </button>
           </nav>
 
-          <VoiceStage
-            :inert="dockOpen || undefined"
-            :aria-hidden="dockOpen ? 'true' : undefined"
-            :session-id="activeSessionId"
-            :messages="messages"
-            :status="status"
-            :audio-level="audioLevel"
-            :mic-blocked="micBlocked"
-            :needs-text-fallback="needsTextFallback"
-            :interim-transcript="interimTranscript"
-            @activate="toggle"
-          >
-            <template
-              v-if="micBlocked"
-              #permission
-            >
-              <MicPermissionAlert
-                :state="micPermission"
-                :is-secure-context="isSecureContext"
-                :busy="isRequestingPermission"
-                @request="requestMicPermission"
-              />
-            </template>
-            <template
-              v-if="error"
-              #error
-            >
-              <ErrorNotice
-                :error="error"
-                @retry="retry"
-                @dismiss="dismissError"
-              />
-            </template>
-          </VoiceStage>
+          <div class="aura-voice-layout">
+            <div class="aura-conversation">
+              <VoiceStage
+                :inert="dockOpen || undefined"
+                :aria-hidden="dockOpen ? 'true' : undefined"
+                :session-id="activeSessionId"
+                :messages="messages"
+                :status="status"
+                :audio-level="audioLevel"
+                :mic-blocked="micBlocked"
+                :needs-text-fallback="needsTextFallback"
+                :interim-transcript="interimTranscript"
+                @activate="toggle"
+              >
+                <template
+                  v-if="favoriteCityCard"
+                  #weather-card
+                >
+                  <WeatherFavoriteCard
+                    :weather="favoriteCityCard.weather"
+                    :can-save="favoriteCityCard.canSave"
+                    :status="favoriteCityCard.status"
+                    :error-message="favoriteCityCard.errorMessage"
+                    @save="saveFavoriteCity"
+                    @dismiss="dismissFavoriteCityCard"
+                  />
+                </template>
+                <template
+                  v-if="micBlocked"
+                  #permission
+                >
+                  <MicPermissionAlert
+                    :state="micPermission"
+                    :is-secure-context="isSecureContext"
+                    :busy="isRequestingPermission"
+                    @request="requestMicPermission"
+                  />
+                </template>
+                <template
+                  v-if="error"
+                  #error
+                >
+                  <ErrorNotice
+                    :error="error"
+                    @retry="retry"
+                    @dismiss="dismissError"
+                  />
+                </template>
+              </VoiceStage>
 
-          <VoiceActionBar
-            :inert="dockOpen || undefined"
-            :aria-hidden="dockOpen ? 'true' : undefined"
-            :status="status"
-            :can-repeat="canRepeat"
-            :force-composer="needsTextFallback"
-            @submit="sendText"
-            @repeat="repeatLastReply"
-            @end="createConversation"
-          />
+              <VoiceActionBar
+                :inert="dockOpen || undefined"
+                :aria-hidden="dockOpen ? 'true' : undefined"
+                :status="status"
+                :can-repeat="canRepeat"
+                :force-composer="needsTextFallback"
+                @submit="sendText"
+                @repeat="repeatLastReply"
+                @end="createConversation"
+              />
+            </div>
+
+            <FavoriteCitiesPanel
+              v-if="userId"
+              class="aura-favorite-cities"
+              :inert="dockOpen || undefined"
+              :aria-hidden="dockOpen ? 'true' : undefined"
+              :cities="favoriteCities"
+              :is-loading="favoriteCitiesLoading"
+              :error="favoriteCitiesError"
+              @remove="handleRemoveFavoriteCity"
+              @retry="retryFavoriteCities"
+              @dismiss="dismissFavoriteCitiesError"
+            />
+          </div>
         </main>
 
         <VoiceTranscriptPanel
@@ -346,6 +405,20 @@ function signOut(): void {
 </template>
 
 <style scoped>
+.aura-voice-layout {
+  min-height: 100%;
+}
+
+.aura-conversation {
+  position: relative;
+  height: 100dvh;
+  min-width: 0;
+}
+
+.aura-favorite-cities {
+  margin: 1rem 1rem 6.5rem;
+}
+
 .aura-header-nav {
   align-items: center;
   max-width: calc(100% - 4.75rem);
@@ -373,6 +446,22 @@ function signOut(): void {
     max-width: 100%;
     justify-self: center;
     text-align: center;
+  }
+}
+
+@media (min-width: 768px) {
+  .aura-voice-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(13.5rem, 16rem);
+  }
+
+  .aura-favorite-cities {
+    position: sticky;
+    top: 4rem;
+    overflow-y: auto;
+    max-height: calc(100dvh - 8rem);
+    align-self: start;
+    margin: 4rem 1rem 6rem 0;
   }
 }
 

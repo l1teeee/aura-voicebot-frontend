@@ -6,6 +6,8 @@ Aura es un asistente personal conversacional por voz especializado en clima. El 
 
 Si el navegador no soporta reconocimiento de voz o el contexto no es seguro (ver más abajo), la aplicación ofrece un campo de texto como alternativa para seguir conversando con Aura sin usar el micrófono.
 
+Los usuarios identificados también pueden guardar ciudades favoritas durante la conversación diciendo "guarda esta ciudad". Un panel plegable muestra la lista, permite quitar ciudades y ofrece reintento cuando no puede sincronizarse con el backend.
+
 ## Arquitectura
 
 El proyecto sigue una arquitectura por capas con dependencias apuntando siempre hacia adentro (estilo hexagonal / clean architecture). Cada capa solo conoce a las capas más internas que ella misma:

@@ -275,6 +275,13 @@ const disabledReason = computed(() => {
       </div>
 
       <div
+        v-if="$slots['weather-card']"
+        class="voice-stage__slot"
+      >
+        <slot name="weather-card" />
+      </div>
+
+      <div
         v-if="$slots.permission"
         class="voice-stage__slot"
       >

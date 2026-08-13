@@ -7,6 +7,7 @@ import type { MicPermissionState } from '@/domain/types/mic-permission-state'
 import type { VoiceError } from '@/domain/types/voice-error'
 import { toVoiceError } from '@/infrastructure/api/httpChatGateway'
 import { useConversationStore } from '@/application/stores/conversation.store'
+import { useFavoriteCitiesStore } from '@/application/stores/favorite-cities.store'
 import { useAudioLevel } from './useAudioLevel'
 import { useMicrophonePermission } from './useMicrophonePermission'
 import { useSpeechRecognition } from './useSpeechRecognition'
@@ -63,6 +64,7 @@ export interface UseVoiceConversationReturn {
   repeatLastReply: () => void
   canRepeat: ComputedRef<boolean>
   dismissError: () => void
+  userId: ComputedRef<string | null>
   userName: ComputedRef<string | null>
   needsIdentity: ComputedRef<boolean>
   isIdentifying: Ref<boolean>
@@ -83,6 +85,7 @@ export function useVoiceConversation(): UseVoiceConversationReturn {
   const gateway = injectedGateway
 
   const store = useConversationStore()
+  const favoriteCitiesStore = useFavoriteCitiesStore()
   const permission = useMicrophonePermission()
   const synthesis = useSpeechSynthesis()
   const audioMeter = useAudioLevel()
@@ -172,6 +175,9 @@ export function useVoiceConversation(): UseVoiceConversationReturn {
     try {
       const response = await gateway.sendMessage(text, messageSessionId, store.userId ?? undefined)
       store.addMessage('bot', response.reply, response.action, undefined, messageSessionId)
+      if (response.action?.type === 'favorite_city_added') {
+        favoriteCitiesStore.invalidate()
+      }
       if (requestVersion === interactionVersion && store.sessionId === messageSessionId) {
         speakReply(response.reply, requestVersion)
       }
@@ -405,6 +411,7 @@ export function useVoiceConversation(): UseVoiceConversationReturn {
 
   function logout(): void {
     stopActiveInteraction()
+    favoriteCitiesStore.clear()
     store.logout()
   }
 
@@ -456,6 +463,7 @@ export function useVoiceConversation(): UseVoiceConversationReturn {
     repeatLastReply,
     canRepeat: computed(() => store.status !== 'processing' && store.messages.some((message) => message.role === 'bot')),
     dismissError,
+    userId: computed(() => store.userId),
     userName: computed(() => store.userName),
     needsIdentity: computed(() => !store.identityResolved || (!store.sessionActive && !store.userId)),
     isIdentifying,

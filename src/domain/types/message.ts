@@ -31,7 +31,17 @@ export interface WeatherAction {
   data: WeatherData
 }
 
-export type ChatAction = WeatherAction
+export interface FavoriteCityAddedAction {
+  type: 'favorite_city_added'
+  data?: unknown
+}
+
+export interface InteractionLogAction {
+  type: 'interaction_log'
+  data?: unknown
+}
+
+export type ChatAction = WeatherAction | FavoriteCityAddedAction | InteractionLogAction
 
 export interface Message {
   id: string
