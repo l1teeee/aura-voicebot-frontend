@@ -135,8 +135,6 @@ onBeforeUnmount(() => {
         <AuraBrand />
       </header>
 
-      <div class="neural-divider" />
-
       <IdentityPrompt
         :busy="busy"
         @identify="emit('identify', $event)"
@@ -248,12 +246,7 @@ onBeforeUnmount(() => {
 
 .neural-header {
   position: relative;
-}
-
-.neural-divider {
-  height: 1px;
-  margin: 1.75rem 0;
-  background: linear-gradient(90deg, rgb(4 75 57 / 0.2), transparent);
+  margin-bottom: 1.75rem;
 }
 
 .neural-feedback:empty {
