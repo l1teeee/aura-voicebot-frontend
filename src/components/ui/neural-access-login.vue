@@ -132,7 +132,6 @@ onBeforeUnmount(() => {
 
     <main class="neural-panel">
       <header class="neural-header">
-        <span class="neural-system-id">Acceso personal / Aura</span>
         <AuraBrand />
       </header>
 
@@ -249,16 +248,6 @@ onBeforeUnmount(() => {
 
 .neural-header {
   position: relative;
-}
-
-.neural-system-id {
-  display: block;
-  margin-bottom: 1rem;
-  color: rgb(5 52 56 / 0.58);
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 0.17em;
-  text-transform: uppercase;
 }
 
 .neural-divider {

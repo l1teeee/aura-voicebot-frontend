@@ -17,7 +17,7 @@
         Aura
       </h1>
       <p class="mt-0.5 text-sm text-muted">
-        Tu asistente de voz, lista para ayudarte.
+        Tu asistente de voz para el clima y la naturaleza.
       </p>
     </div>
   </div>
