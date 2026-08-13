@@ -96,7 +96,7 @@ function createOrbPath(irregularity = 0): string {
   return `${path} Z`
 }
 
-const baseOrbPath = createOrbPath()
+const baseOrbPath = createOrbPath(3)
 
 const cloudGradientId = useId()
 const highlightGradientId = useId()
@@ -193,11 +193,11 @@ onMounted(() => {
       if (stopped) return
 
       cloudTween = gsap.to(cloud, {
-        x: random(-9, 9),
-        y: random(-8, 8),
-        rotation: `${random(-18, 18)}_short`,
-        scaleX: random(0.96, 1.05),
-        scaleY: random(0.95, 1.06),
+        x: random(-14, 14),
+        y: random(-12, 12),
+        rotation: `${random(-26, 26)}_short`,
+        scaleX: random(0.93, 1.08),
+        scaleY: random(0.92, 1.09),
         duration: random(3.4, 5.5),
         ease: 'sine.inOut',
         overwrite: 'auto',
@@ -244,6 +244,21 @@ onMounted(() => {
       })
     }
 
+    function driftShape(): void {
+      if (stopped || props.status !== 'idle') return
+
+      shapeTween = gsap.to(path, {
+        attr: { d: createOrbPath(random(2.2, 4.5)) },
+        duration: random(2.6, 4.2),
+        ease: 'sine.inOut',
+        overwrite: true,
+        onComplete: () => {
+          if (stopped || props.status !== 'idle') return
+          shapeDelay = gsap.delayedCall(random(0.3, 0.9), driftShape)
+        },
+      })
+    }
+
     moveGradient()
     moveHighlight()
     moveCloud()
@@ -262,6 +277,20 @@ onMounted(() => {
         if (status === 'listening') {
           shapeStep = 0
           moveShape()
+          return
+        }
+
+        if (status === 'idle') {
+          settleTween = gsap.to(path, {
+            attr: { d: baseOrbPath },
+            duration: 0.8,
+            ease: 'sine.inOut',
+            overwrite: true,
+            onComplete: () => {
+              if (stopped || props.status !== 'idle') return
+              driftShape()
+            },
+          })
           return
         }
 
@@ -588,7 +617,7 @@ onUnmounted(() => {
 
 /* La respiracion vive en el SVG interno para no pisar el transform del wrapper. */
 .is-idle .aura-orb__art {
-  animation: orb-breathe 8s ease-in-out infinite alternate;
+  animation: orb-breathe 6s ease-in-out infinite alternate;
 }
 
 /* Hablando el usuario: la esfera se aclara hacia blanco, mas cuanto mas fuerte
@@ -629,7 +658,10 @@ onUnmounted(() => {
 }
 
 .is-processing .aura-orb__visual {
-  opacity: 0.78;
+  --orb-scale: 0.8;
+  --orb-saturation: 0;
+  --orb-brightness: 0.92;
+  opacity: 0.82;
 }
 
 .is-error .aura-orb__visual {
@@ -697,7 +729,7 @@ onUnmounted(() => {
 
 @keyframes orb-breathe {
   from { transform: scale(1); }
-  to { transform: scale(1.025); }
+  to { transform: scale(1.045); }
 }
 
 @media (prefers-reduced-motion: reduce) {
