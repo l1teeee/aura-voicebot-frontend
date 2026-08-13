@@ -37,6 +37,7 @@ const props = withDefaults(defineProps<{
 
 const emit = defineEmits<{
   select: [sessionId: string]
+  remove: [sessionId: string]
   new: []
   logout: []
   close: []
@@ -295,6 +296,7 @@ onBeforeUnmount(() => {
               <li
                 v-for="item in group.items"
                 :key="item.conversation.sessionId"
+                class="history-panel__row"
               >
                 <button
                   class="history-panel__item"
@@ -320,6 +322,20 @@ onBeforeUnmount(() => {
                     <strong>{{ item.title }}</strong>
                     <span>{{ formatActivity(item.lastActivity) }}</span>
                   </span>
+                </button>
+                <button
+                  class="history-panel__item-remove"
+                  type="button"
+                  :aria-label="`Eliminar conversación ${item.title}`"
+                  @click="emit('remove', item.conversation.sessionId)"
+                >
+                  <MorphIcon
+                    :icon="X"
+                    :size="13"
+                    :stroke-width="1.8"
+                    spring="snappy"
+                    reduced-motion="user"
+                  />
                 </button>
               </li>
             </ul>
@@ -578,12 +594,20 @@ onBeforeUnmount(() => {
   list-style: none;
 }
 
+.history-panel__row {
+  display: flex;
+  min-width: 0;
+  max-width: 100%;
+  align-items: center;
+  gap: 0.1rem;
+}
+
 .history-panel__item {
   position: relative;
   display: flex;
   min-width: 0;
   max-width: 100%;
-  width: 100%;
+  flex: 1;
   min-height: 42px;
   align-items: center;
   gap: 0.55rem;
@@ -597,6 +621,32 @@ onBeforeUnmount(() => {
   transition:
     background-color var(--aura-duration-hover) var(--aura-ease-soft),
     color var(--aura-duration-hover) var(--aura-ease-soft);
+}
+
+.history-panel__item-remove {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--aura-sidebar-faint);
+  transition:
+    background-color var(--aura-duration-hover) var(--aura-ease-soft),
+    color var(--aura-duration-hover) var(--aura-ease-soft);
+}
+
+.history-panel__item-remove:hover {
+  background: var(--aura-sidebar-hover);
+  color: var(--aura-sidebar-muted);
+}
+
+.history-panel__item-remove svg {
+  width: 0.85rem;
+  height: 0.85rem;
 }
 
 .history-panel__item:hover {
@@ -742,6 +792,7 @@ onBeforeUnmount(() => {
 
 .history-panel__new:focus-visible,
 .history-panel__item:focus-visible,
+.history-panel__item-remove:focus-visible,
 .history-panel__logout:focus-visible {
   outline: 3px solid var(--aura-sky);
   outline-offset: 2px;

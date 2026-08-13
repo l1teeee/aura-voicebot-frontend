@@ -328,6 +328,21 @@ export const useConversationStore = defineStore('conversation', () => {
     touchActivity()
   }
 
+  function removeConversation(targetSessionId: string): void {
+    const exists = conversations.value.some((conversation) => conversation.sessionId === targetSessionId)
+    if (!exists) return
+
+    const wasActive = sessionId.value === targetSessionId
+    conversations.value = conversations.value.filter(
+      (conversation) => conversation.sessionId !== targetSessionId,
+    )
+    persistLocalHistory()
+
+    if (wasActive) {
+      startNewConversation()
+    }
+  }
+
   function setStatus(next: ConversationStatus): void {
     status.value = next
   }
@@ -381,6 +396,7 @@ export const useConversationStore = defineStore('conversation', () => {
     identityResolved,
     setIdentity,
     startNewConversation,
+    removeConversation,
     reset,
     logout,
   }

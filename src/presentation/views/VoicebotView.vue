@@ -41,6 +41,7 @@ const {
   activeSessionId,
   selectConversation,
   startNewConversation,
+  removeConversation,
   logout,
 } = useVoiceConversation()
 
@@ -229,6 +230,7 @@ function signOut(): void {
           :user-name="userName ?? 'Invitado'"
           :open="historyOpen"
           @select="chooseConversation"
+          @remove="removeConversation"
           @new="createConversation"
           @logout="signOut"
           @close="closeHistory"

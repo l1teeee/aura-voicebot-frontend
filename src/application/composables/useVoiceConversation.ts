@@ -74,6 +74,7 @@ export interface UseVoiceConversationReturn {
   activeSessionId: ComputedRef<string>
   selectConversation: (sessionId: string) => boolean
   startNewConversation: () => void
+  removeConversation: (sessionId: string) => void
   logout: () => void
 }
 
@@ -409,6 +410,13 @@ export function useVoiceConversation(): UseVoiceConversationReturn {
     store.startNewConversation()
   }
 
+  function removeConversation(targetSessionId: string): void {
+    if (store.sessionId === targetSessionId) {
+      stopActiveInteraction()
+    }
+    store.removeConversation(targetSessionId)
+  }
+
   function logout(): void {
     stopActiveInteraction()
     favoriteCitiesStore.clear()
@@ -473,6 +481,7 @@ export function useVoiceConversation(): UseVoiceConversationReturn {
     activeSessionId: computed(() => store.sessionId),
     selectConversation,
     startNewConversation,
+    removeConversation,
     logout,
   }
 }
