@@ -2,7 +2,7 @@
 
 **Demo en producción:** https://aura-voicebot-frontend.vercel.app/
 
-Aura es un asistente personal conversacional por voz especializado en clima. El usuario pulsa un botón, habla, y Aura transcribe su voz localmente en el navegador, envía el texto al backend, y lee en voz alta la respuesta generada. Cuando la pregunta involucra el tiempo en una ciudad, la respuesta viene acompañada de un dato estructurado (`weather_lookup`) que la interfaz muestra como una línea de contexto discreta bajo el turno correspondiente.
+Aura es un asistente personal conversacional por voz especializado en clima. El usuario pulsa un botón, habla, y Aura transcribe su voz localmente en el navegador, envía el texto al backend, y lee en voz alta la respuesta generada. Cuando la pregunta involucra el tiempo en una ciudad, la respuesta del backend viene acompañada de un dato estructurado (`weather_lookup`) con temperatura, sensación térmica y descripción del cielo; hoy Aura lo comunica hablado y en el texto de su respuesta, sin una tarjeta visual aparte.
 
 Si el navegador no soporta reconocimiento de voz o el contexto no es seguro (ver más abajo), la aplicación ofrece un campo de texto como alternativa para seguir conversando con Aura sin usar el micrófono.
 
@@ -63,7 +63,7 @@ La aplicación queda disponible en `http://localhost:5173`, que es un contexto s
 | Script | Descripción |
 |---|---|
 | `npm run dev` | Servidor de desarrollo con recarga en caliente (Vite). |
-| `npm run build` | Type-check completo (`vue-tsc -b`) seguido de build de producción. |
+| `npm run build` | Type-check completo (`vue-tsc --noEmit`) seguido de build de producción. |
 | `npm run preview` | Sirve localmente el resultado de `npm run build`. |
 | `npm run typecheck` | Type-check sin emitir archivos. |
 | `npm run lint` | ESLint sobre todo el proyecto. |
