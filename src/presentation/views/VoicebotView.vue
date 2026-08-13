@@ -377,7 +377,6 @@ function signOut(): void {
 
             <FavoriteCitiesPanel
               v-if="userId"
-              class="aura-favorite-cities"
               :inert="dockOpen || undefined"
               :aria-hidden="dockOpen ? 'true' : undefined"
               :cities="favoriteCities"
@@ -415,10 +414,6 @@ function signOut(): void {
   min-width: 0;
 }
 
-.aura-favorite-cities {
-  margin: 1rem 1rem 6.5rem;
-}
-
 .aura-header-nav {
   align-items: center;
   max-width: calc(100% - 4.75rem);
@@ -446,22 +441,6 @@ function signOut(): void {
     max-width: 100%;
     justify-self: center;
     text-align: center;
-  }
-}
-
-@media (min-width: 768px) {
-  .aura-voice-layout {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(13.5rem, 16rem);
-  }
-
-  .aura-favorite-cities {
-    position: sticky;
-    top: 4rem;
-    overflow-y: auto;
-    max-height: calc(100dvh - 8rem);
-    align-self: start;
-    margin: 4rem 1rem 6rem 0;
   }
 }
 

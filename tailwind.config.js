@@ -12,6 +12,8 @@ export default {
         'accent-active': '#044B39',
         'alert-surface': '#CBF39D',
         'alert-edge': '#72C613',
+        pin: '#EC4899',
+        'pin-active': '#DB2777',
       },
       fontFamily: {
         serif: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
