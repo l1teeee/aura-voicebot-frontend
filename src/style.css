@@ -262,10 +262,7 @@ input:hover:not(:disabled) {
 }
 
 input:focus-visible {
-  outline: 3px solid var(--aura-sky) !important;
-  outline-offset: 2px;
   border-color: var(--aura-teal) !important;
-  box-shadow: 0 0 0 5px rgb(189 240 236 / 0.9);
 }
 
 button {
